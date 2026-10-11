@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <nav class="bg-gray-800 p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">📈 Stock Analyzer</h1>
+            <div class="space-x-4">
+                <a href="/" class="hover:text-blue-400">Home</a>
+                <a href="/analysis" class="hover:text-blue-400">Analyze</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-8" x-data="analyzer()">
+        <h2 class="text-4xl font-bold mb-8">Stock Analysis</h2>
+        
+        <!-- Search Bar -->
+        <div class="flex gap-4 mb-8">
+            <input 
+                x-model="ticker" 
+                placeholder="Enter ticker (AAPL, BBCA.JK, etc.)" 
+                class="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+                @keyup.enter="analyze()"
+            >
+            <button @click="analyze()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded">
+                Analyze
+            </button>
+        </div>
+
+        <!-- Loading -->
+        <div x-show="loading" class="text-center text-blue-400">
+            Loading...
+        </div>
+
+        <!-- Error -->
+        <div x-show="error" class="bg-red-900 p-4 rounded mb-4 text-white">
+            <span x-text="error"></span>
+        </div>
+
+        <!-- Results -->
+        <template x-if="data">
+            <div class="space-y-6">
+                <!-- Signal Card -->
+                <div class="bg-gray-800 p-8 rounded border-2" 
+                     :class="data.signal.includes('BUY') ? 'border-green-500' : 'border-red-500'">
+                    
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-5xl font-bold" :class="data.signal.includes('BUY') ? 'text-green-400' : 'text-red-400'">
+                                <span x-text="data.signal"></span>
+                            </div>
+                            <div class="text-gray-400 mt-2">Signal</div>
+                        </div>
+                        <div>
+                            <div class="text-5xl font-bold text-blue-400">
+                                <span x-text="data.confidence"></span>%
+                            </div>
+                            <div class="text-gray-400 mt-2">Confidence</div>
+                        </div>
+                        <div>
+                            <div class="text-5xl font-bold text-yellow-400">
+                                $<span x-text="data.price.toFixed(2)"></span>
+                            </div>
+                            <div class="text-gray-400 mt-2">Price</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indicators -->
+                <div class="bg-gray-800 p-6 rounded">
+                    <h3 class="text-2xl font-bold mb-4">Indicators</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span>Close Price</span>
+                            <span>$<span x-text="data.price.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span>EMA 9</span>
+                            <span>$<span x-text="data.ema_9.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span>EMA 21</span>
+                            <span>$<span x-text="data.ema_21.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span>EMA 55</span>
+                            <span>$<span x-text="data.ema_55.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span>RSI (14)</span>
+                            <span x-text="data.rsi.toFixed(2)"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </main>
+
+    <script>
+    function analyzer() {
+        return {
+            ticker: '',
+            data: null,
+            loading: false,
+            error: '',
+            
+            async analyze() {
+                if (!this.ticker) {
+                    this.error = 'Enter a ticker';
+                    return;
+                }
+                
+                this.loading = true;
+                this.error = '';
+                this.data = null;
+                
+                try {
+                    const response = await fetch(`/api/stock/${this.ticker}`);
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error);
+                    }
+                    
+                    this.data = await response.json();
+                    
+                } catch (e) {
+                    this.error = e.message;
+                } finally {
+                    this.loading = false;
+                }
+            }
+        }
+    }
+    </script>
+</body>
+</html>

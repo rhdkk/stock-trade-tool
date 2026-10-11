@@ -1,21 +1,8 @@
-# Core Data Libraries
-numpy==1.24.3
-pandas==2.0.3
-
-# Technical Analysis
+Flask==2.3.0
+Flask-CORS==4.0.0
 yfinance==0.2.32
+pandas==2.0.3
+numpy==1.24.3
 ta==0.10.2
-
-# Web & API
-requests==2.31.0
-beautifulsoup4==4.12.2
 python-dotenv==1.0.0
-
-# GUI
-PyQt6==6.6.0
-pyqtgraph==0.13.3
-matplotlib==3.7.2
-Pillow==10.0.0
-
-# Utilities
-colorama==0.4.6
+Werkzeug==2.3.0
