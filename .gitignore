@@ -1,7 +1,6 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 .Python
 venv/
@@ -12,16 +11,14 @@ env/
 .vscode/
 .idea/
 *.swp
-*.swo
 
 # Environment
 .env
 .env.local
 
-# Data files
+# Database
 *.db
 *.sqlite3
-*.csv
 
 # Logs
 logs/
@@ -30,7 +27,3 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
-
-# Cache
-.cache/
-*.cache

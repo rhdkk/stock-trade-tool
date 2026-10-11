@@ -1,32 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Technical Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
-</head>
-<body class="bg-gray-900 text-white">
-    <nav class="bg-gray-800 p-4">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold">📈 Stock Analyzer</h1>
-            <div class="space-x-4">
-                <a href="/" class="hover:text-blue-400">Home</a>
-                <a href="/analysis" class="hover:text-blue-400">Analyze</a>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Hero Section -->
+    <section class="text-center py-16">
+        <h1 class="text-5xl font-bold mb-4 text-white">Stock Technical Analyzer</h1>
+        <p class="text-xl text-gray-300 mb-12">Real-time technical analysis for swing trading</p>
+        
+        <!-- Single CTA Card -->
+        <div class="max-w-2xl mx-auto">
+            <div class="card hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 transition">
+                <div class="text-6xl mb-6">📊</div>
+                <h3 class="text-3xl font-bold mb-4 text-white">Start Analyzing Stocks</h3>
+                <p class="text-gray-300 mb-8 text-lg">Get real-time technical signals with EMA, RSI, MACD, Bollinger Bands, and more</p>
+                <a href="/analysis" class="inline-block px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg hover:from-blue-700 hover:to-blue-800 transition text-lg">
+                    Go to Analyzer →
+                </a>
             </div>
         </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto p-8">
-        <div class="text-center">
-            <h2 class="text-4xl font-bold mb-4">Stock Technical Analyzer</h2>
-            <p class="text-xl text-gray-400 mb-8">Analyze stocks with technical indicators</p>
+    </section>
+    
+    <!-- Features Section -->
+    <section class="card">
+        <h2 class="text-3xl font-bold mb-8 text-white">📈 Key Features</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gray-700 bg-opacity-50 p-4 rounded-lg border border-gray-600">
+                <h4 class="text-lg font-bold text-green-400 mb-2">🟢 Entry Signals</h4>
+                <ul class="text-sm text-gray-300 space-y-1">
+                    <li>• RSI < 30 (oversold)</li>
+                    <li>• EMA 9 > 21 > 55</li>
+                    <li>• MACD bullish crossover</li>
+                    <li>• Volume confirmation</li>
+                </ul>
+            </div>
             
-            <a href="/analysis" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded text-lg">
-                Start Analysis
-            </a>
+            <div class="bg-gray-700 bg-opacity-50 p-4 rounded-lg border border-gray-600">
+                <h4 class="text-lg font-bold text-blue-400 mb-2">📊 7 Indicators</h4>
+                <ul class="text-sm text-gray-300 space-y-1">
+                    <li>• EMA (9, 21, 55)</li>
+                    <li>• MACD & Signal</li>
+                    <li>• RSI & Stochastic</li>
+                    <li>• Bollinger Bands</li>
+                </ul>
+            </div>
+            
+            <div class="bg-gray-700 bg-opacity-50 p-4 rounded-lg border border-gray-600">
+                <h4 class="text-lg font-bold text-yellow-400 mb-2">🎯 Exit Signals</h4>
+                <ul class="text-sm text-gray-300 space-y-1">
+                    <li>• +5% profit target</li>
+                    <li>• -2.5% stop loss</li>
+                    <li>• Max 14 days hold</li>
+                    <li>• RSI > 70 overbought</li>
+                </ul>
+            </div>
         </div>
-    </main>
-</body>
-</html>
+    </section>
+    
+    <!-- Quick Stats -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="card text-center">
+            <div class="text-3xl font-bold text-blue-400">7</div>
+            <p class="text-gray-400 mt-2">Technical Indicators</p>
+        </div>
+        <div class="card text-center">
+            <div class="text-3xl font-bold text-green-400">1-2 Weeks</div>
+            <p class="text-gray-400 mt-2">Swing Trade Holds</p>
+        </div>
+        <div class="card text-center">
+            <div class="text-3xl font-bold text-yellow-400">Real-time</div>
+            <p class="text-gray-400 mt-2">Market Data</p>
+        </div>
+    </section>
+</div>
+{% endblock %}

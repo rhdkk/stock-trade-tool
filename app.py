@@ -1,78 +1,132 @@
+"""
+Stock Technical Analyzer - Web App
+Flask Backend - Analysis Only
+"""
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
-import yfinance as yf
+import os
+import sys
+from dotenv import load_dotenv
 import pandas as pd
-import numpy as np
 
+# Add backend to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
+
+from data_fetcher import StockDataFetcher
+from technical_analysis import TechnicalAnalyzer
+from signals import SignalGenerator
+from fundamental_analyzer import FundamentalAnalyzer
+
+# Load environment variables
+load_dotenv()
+
+# Create Flask app
 app = Flask(__name__)
 CORS(app)
 
 # Configuration
-EMA_FAST = 9
-EMA_MID = 21
-EMA_SLOW = 55
-RSI_PERIOD = 14
+app.config['JSON_SORT_KEYS'] = False
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key')
+
+# Initialize components
+fetcher = StockDataFetcher()
+analyzer = TechnicalAnalyzer()
+signal_gen = SignalGenerator()
+fund_analyzer = FundamentalAnalyzer()
+
+# ===== ROUTES =====
 
 @app.route('/')
 def index():
+    """Home page"""
     return render_template('index.html')
 
 @app.route('/analysis')
 def analysis():
+    """Stock analysis page"""
     return render_template('analysis.html')
 
-@app.route('/api/stock/<ticker>')
-def get_stock(ticker):
+# ===== API ENDPOINTS =====
+
+@app.route('/api/stock/<ticker>', methods=['GET'])
+def get_stock_analysis(ticker):
+    """Analyze single stock"""
     try:
         ticker = ticker.upper()
+        period = request.args.get('period', '3mo')
+        interval = request.args.get('interval', '1d')
         
         # Fetch data
-        stock = yf.Ticker(ticker)
-        df = stock.history(period='3mo')
+        df = fetcher.fetch_stock_data(ticker, period=period, interval=interval)
         
-        if df.empty:
-            return jsonify({'error': 'No data found'}), 404
+        if df is None or df.empty:
+            return jsonify({'error': f'No data found for {ticker}'}), 404
         
-        df.columns = df.columns.str.lower()
+        # Add indicators
+        df = analyzer.add_all_indicators(df)
         
-        # Calculate EMA
-        df['ema_9'] = df['close'].ewm(span=EMA_FAST, adjust=False).mean()
-        df['ema_21'] = df['close'].ewm(span=EMA_MID, adjust=False).mean()
-        df['ema_55'] = df['close'].ewm(span=EMA_SLOW, adjust=False).mean()
+        # Get signal
+        signal, confidence, details = signal_gen.analyze_signals(df)
         
-        # Calculate RSI
-        delta = df['close'].diff()
-        gain = delta.where(delta > 0, 0).rolling(window=RSI_PERIOD).mean()
-        loss = -delta.where(delta < 0, 0).rolling(window=RSI_PERIOD).mean()
-        rs = gain / loss
-        df['rsi'] = 100 - (100 / (1 + rs))
+        # Get fundamentals
+        fundamental = fund_analyzer.get_fundamental_overview(ticker)
         
+        # Prepare chart data
         latest = df.iloc[-1]
+        chart_data = {
+            'dates': df.index.strftime('%Y-%m-%d').tolist(),
+            'close': df['close'].tolist(),
+            'volume': df['volume'].tolist(),
+            'ema_9': df['ema_9'].tolist(),
+            'ema_21': df['ema_21'].tolist(),
+            'ema_55': df['ema_55'].tolist(),
+        }
         
-        # Determine signal
-        if latest['close'] > latest['ema_9'] > latest['ema_21'] > latest['ema_55']:
-            signal = 'BUY'
-            confidence = 85
-        elif latest['close'] < latest['ema_9'] < latest['ema_21'] < latest['ema_55']:
-            signal = 'SELL'
-            confidence = 85
-        else:
-            signal = 'HOLD'
-            confidence = 50
+        # Prepare indicators
+        indicators = {
+            'price': float(latest['close']),
+            'ema_9': float(latest['ema_9']) if not pd.isna(latest['ema_9']) else None,
+            'ema_21': float(latest['ema_21']) if not pd.isna(latest['ema_21']) else None,
+            'ema_55': float(latest['ema_55']) if not pd.isna(latest['ema_55']) else None,
+            'rsi': float(latest['rsi']) if not pd.isna(latest['rsi']) else None,
+            'macd': float(latest['macd']) if not pd.isna(latest['macd']) else None,
+            'macd_signal': float(latest['macd_signal']) if not pd.isna(latest['macd_signal']) else None,
+            'bb_upper': float(latest['bb_upper']) if not pd.isna(latest['bb_upper']) else None,
+            'bb_lower': float(latest['bb_lower']) if not pd.isna(latest['bb_lower']) else None,
+            'stoch_k': float(latest['stoch_k']) if not pd.isna(latest['stoch_k']) else None,
+            'stoch_d': float(latest['stoch_d']) if not pd.isna(latest['stoch_d']) else None,
+            'volume': float(latest['volume']) if not pd.isna(latest['volume']) else None,
+        }
         
         return jsonify({
             'ticker': ticker,
             'signal': signal,
             'confidence': confidence,
-            'price': float(latest['close']),
-            'rsi': float(latest['rsi']),
-            'ema_9': float(latest['ema_9']),
-            'ema_21': float(latest['ema_21']),
-            'ema_55': float(latest['ema_55']),
+            'details': details,
+            'indicators': indicators,
+            'fundamentals': fundamental,
+            'chart': chart_data,
         })
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check"""
+    return jsonify({'status': 'OK'})
+
+# ===== ERROR HANDLERS =====
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Not found'}), 404
+
+@app.errorhandler(500)
+def server_error(error):
+    return jsonify({'error': 'Server error'}), 500
+
+# ===== MAIN =====
+
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(host='127.0.0.1', port=5000, debug=True)
